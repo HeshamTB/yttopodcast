@@ -17,7 +17,6 @@ import (
 
 const (
     YT_FEED_URL  = "https://www.youtube.com/feeds/videos.xml?channel_id=%s"
-    YT_FEED_SAM  = "https://www.youtube.com/feeds/videos.xml?channel_id=UC5Uxq95L6K60XVdNPmUxoYA"
     YT_VIDEO_URL = "https://youtube.com/watch?v=%s"
     __GENERATOR_NAME = "yttopodcast - H.B."
 )
@@ -36,7 +35,7 @@ func ConvertYtToRss(w io.Writer, channel_id string, bounce_url string, meta RSSM
     channelUrl := fmt.Sprintf(YT_FEED_URL, channel_id)
     feed, err := getFeed(channelUrl)
     if err != nil {
-	return FeedErr(err)
+	return feedErr(err)
     }
 
     t_now := time.Now().UTC()
@@ -107,18 +106,19 @@ func ConvertYtToRss(w io.Writer, channel_id string, bounce_url string, meta RSSM
     rssTemplate.Execute(&rssResult, podFeed)
     _, err = gofeed.NewParser().ParseString(rssResult.String())
     if err != nil {
-	return FeedErr(err)
+	return feedErr(err)
     }
 
     return nil
 }
 
+// Convert to Yt Atom to RSS given a Reader that provides xml
 func convertAtomToRSS(w io.Writer, r io.Reader, meta RSSMetadata) error {
     var podFeed templates.FeedData
 
     feed, err := gofeed.NewParser().Parse(r)
     if err != nil {
-	return FeedErr(err)
+	return feedErr(err)
     }
 
     t_now := time.Now().UTC()
@@ -189,13 +189,13 @@ func convertAtomToRSS(w io.Writer, r io.Reader, meta RSSMetadata) error {
     rssTemplate.Execute(&rssResult, podFeed)
     _, err = gofeed.NewParser().ParseString(rssResult.String())
     if err != nil {
-	return FeedErr(err)
+	return feedErr(err)
     }
 
     return nil
 }
 
-func FeedErr(err error) error {
+func feedErr(err error) error {
     httpErr, ok := err.(gofeed.HTTPError)
     if ok {
 	switch httpErr.StatusCode {
