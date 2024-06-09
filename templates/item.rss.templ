@@ -1,0 +1,17 @@
+<item>
+    <title>{{ .Title }}</title>
+    <itunes:title>{{ .Title }}</itunes:title>
+    <pubDate>{{ .PublishDateRfcEmail }}</pubDate>
+    <guid isPermaLink="false"><![CDATA[d598cacb-25dd-4659-8839-2829707208da]]></guid>
+    <link><![CDATA[https://youtube.com/watch?v={{ .Id }}]]></link>
+    <itunes:image href="{{ .CoverImageURL }}" />
+    <description><![CDATA[ {{ .Description }}]]></description>
+    <content:encoded><![CDATA[{{ .Description }}]]></content:encoded>
+    <enclosure length="{{ .Length }}" type="audio/mpeg" url="{{ .JumpUrl }}" />
+    <itunes:duration>{{ .Duration }}</itunes:duration>
+    <itunes:explicit>false</itunes:explicit>
+    <itunes:keywords />
+    <itunes:subtitle><![CDATA[In a bipartisan fashion the United States House of Representatives has passed the “Antisemitism Awareness Act,” a transparent evisceration of the first amendment’s free speech protections. If the bill passes the Senate and is signed by President...]]></itunes:subtitle>
+    <itunes:episodeType>full</itunes:episodeType>
+</item>
+

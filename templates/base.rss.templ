@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:cc="http://web.resource.org/cc/" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:media="http://search.yahoo.com/mrss/" xmlns:content="http://purl.org/rss/1.0/modules/content/"  xmlns:podcast="https://podcastindex.org/namespace/1.0"  xmlns:googleplay="http://www.google.com/schemas/play-podcasts/1.0" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<channel>
+	<atom:link href="{{ .FeedURL }}" rel="self" type="application/rss+xml"/>
+	<title>{{ .Title  }}</title>
+	<pubDate>{{ .PublishDateRfcEmail }}</pubDate>
+	<lastBuildDate>{{ .BuildDateRfcEmail }}</lastBuildDate>
+	<generator>{{ .GeneratorName }}</generator>
+	<link>{{ .PodcastPage }}</link>
+	<language>{{ .Lang }}</language>
+	<copyright>
+	<![CDATA[{{ .CopyRight }}]]>
+	</copyright>
+	<docs>{{ .PodcastPage }}</docs>
+	<itunes:summary><![CDATA[{{ .Summary }}]]></itunes:summary>
+	<image>
+		<url>{{ .PodcastImageURL }}</url>
+		<title>{{ .Title }}</title>
+		<link><![CDATA[{{ .PodcastImageURL }}]]></link>
+	</image>
+	<itunes:author>{{ .Title }}</itunes:author>
+	<itunes:keywords>Youtube,{{ .Title }}</itunes:keywords>
+	<itunes:category text="Arts">
+	<itunes:category text="Performing Arts"/>
+	</itunes:category>
+		<itunes:category text="Comedy">
+	</itunes:category>
+	<itunes:image href="{{ .PodcastImageURL }}" />
+	<itunes:explicit>false</itunes:explicit>
+	<itunes:owner>
+		<itunes:name><![CDATA[{{ .Title }}]]></itunes:name>
+		<itunes:email>mail@mail.none</itunes:email>
+	</itunes:owner>
+	<description><![CDATA[{{ .Summary }}]]></description>
+	<itunes:type>episodic</itunes:type>
+	<podcast:locked owner="{{ .Title }}">no</podcast:locked>{{ range .Items }}
+	<item>
+	    <title><![CDATA[{{ .Title }}]]></title>
+	    <itunes:title><![CDATA[{{ .Title }}]]></itunes:title>
+	    <pubDate>{{ .PublishDateRfcEmail }}</pubDate>
+	    <guid isPermaLink="false"><![CDATA[{{ .Id }}]]></guid>
+	    <link><![CDATA[https://youtube.com/watch?v={{ .Id }}]]></link>
+	    <itunes:image href="{{ .CoverImageURL }}" />
+	    <description><![CDATA[ {{ .Description }}]]></description>
+	    <content:encoded><![CDATA[{{ .Description }}]]></content:encoded>
+	    <enclosure length="{{ .Length }}" type="audio/mpeg" url="{{ .EnclosureURL }}" />
+	    <itunes:duration>{{ .Duration }}</itunes:duration>
+	    <itunes:explicit>false</itunes:explicit>
+	    <itunes:keywords />
+	    <itunes:subtitle><![CDATA[The itunes subtitle]]></itunes:subtitle>
+	    <itunes:episodeType>full</itunes:episodeType>
+	</item>{{ end }}
+</channel>
+</rss>
