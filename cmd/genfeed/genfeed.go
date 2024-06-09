@@ -27,8 +27,10 @@ func main() {
     }
     fmt.Fprintf(os.Stderr, "id: %s\nbouncer: %s\n", *chan_id, *bounc_url)
     
-    err := feed.ConvertYtToRss(os.Stdout, *chan_id, *bounc_url, 
-        feed.RSSMetadata{Languge: "en", Copyright: "N/A", Summary: "YouTube Channel as podcast"})
+    err := feed.ConvertYtToRss(os.Stdout, *chan_id, 
+        feed.RSSMetadata{
+            Languge: "en", Copyright: "N/A", Summary: "YouTube Channel as podcast", BounceURL: *bounc_url})
+
     if err != nil {
         fmt.Fprintln(os.Stderr, err.Error())
         os.Exit(1)

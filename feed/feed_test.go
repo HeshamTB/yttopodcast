@@ -84,7 +84,7 @@ func TestAtomToRSS(t *testing.T) {
 
     buf := bytes.Buffer{}
     
-    err = convertAtomToRSS(&buf, f, RSSMetadata{BounceURL: "http://localhost:8081/q=%s"})
+    err = ConvertAtomToRSS(&buf, f, RSSMetadata{BounceURL: "http://localhost:8081/q=%s"})
     if err != nil {
 	t.Error(err.Error())
 	t.FailNow()
