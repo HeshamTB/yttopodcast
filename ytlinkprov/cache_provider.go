@@ -2,7 +2,10 @@ package ytlinkprov
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/lrstanley/go-ytdlp"
@@ -70,11 +73,28 @@ func (c *CacheLinkProv) validCache(l TimedLink) bool {
 }
 
 func getRemoteLink(id string) (string, error) {
+
+    var link string
+
     vidUrl := fmt.Sprintf("https://youtube.com/watch?v=%s", id)
     ytCmd := ytdlp.New().ExtractAudio().GetURL()
     ytRes, err := ytCmd.Run(context.Background(), vidUrl)
     if err != nil {
         return "", err
     }
-    return ytRes.Stdout, nil
+    linkFirst := strings.Split(ytRes.Stdout, "\n")[0]
+
+    /* Get the last link in a chain of 3XX codes*/
+    resp, err := http.Get(link)
+    if err != nil {
+        return "", err
+    }
+
+    if resp.StatusCode != http.StatusOK {
+        return linkFirst, nil
+    }
+
+    link = resp.Request.URL.String()
+    return link, nil
+
 }
