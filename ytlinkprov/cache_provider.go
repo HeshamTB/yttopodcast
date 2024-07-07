@@ -2,7 +2,6 @@ package ytlinkprov
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -85,7 +84,7 @@ func getRemoteLink(id string) (string, error) {
     linkFirst := strings.Split(ytRes.Stdout, "\n")[0]
 
     /* Get the last link in a chain of 3XX codes*/
-    resp, err := http.Get(link)
+    resp, err := http.Get(linkFirst)
     if err != nil {
         return "", err
     }
