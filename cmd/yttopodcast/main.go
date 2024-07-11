@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"gitea.hbanafa.com/hesham/yttopodcast/bouncer"
+	"gitea.hbanafa.com/hesham/yttopodcast/dylinkprovider"
 	"gitea.hbanafa.com/hesham/yttopodcast/feed"
-	"gitea.hbanafa.com/hesham/yttopodcast/ytlinkprov"
 )
 
 var (
@@ -36,11 +36,12 @@ func main() {
         os.Exit(1)
     }
     
-    cache, err := ytlinkprov.NewCachedLinkProvider(time.Minute * time.Duration(*interval))
-    if err != nil {
-        l.Println(err.Error())
-        os.Exit(1)
-    }
+   // cache, err := ytlinkprov.NewCachedLinkProvider(time.Minute * time.Duration(*interval))
+   // if err != nil {
+   //     l.Println(err.Error())
+   //     os.Exit(1)
+   // }
+    cache := dylinkprovider.NewDynCacheExpLinkProv(&l)
 
     bouncer, err := bouncer.NewBouncerHTTPServer(context.Background(), *listenAddr, cache)
     if err != nil {
