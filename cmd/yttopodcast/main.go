@@ -3,10 +3,13 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"gitea.hbanafa.com/hesham/yttopodcast/bouncer"
@@ -21,6 +24,7 @@ var (
     fileServAdd  = flag.String("fs-addr", "0.0.0.0:8087", "http file server listen address")
     interval = flag.Int("interval", 30, "update interval for feed in minutes")
     chan_id = flag.String("id", "", "YouTube channel ID")
+    chanlist_file = flag.String("list-file", "", "file with newline seperated channel ids")
     bounc_url = flag.String("bouncer", "http://localhost:8081/?id=%s", "bouncer url as format string")
     lang = flag.String("lang", "en", "content language")
 )
@@ -31,16 +35,50 @@ func main() {
     flag.Parse()
     l = *log.Default()
 
-    if *chan_id == "" {
-        l.Println("no channel id provided")
+
+    var ids []string
+    if *chan_id != "" {
+        l.Println("adding id arg")
+        ids = append(ids, *chan_id)
+    }
+
+    if *chanlist_file != "" {
+        listids, err := func() ([]string, error) {
+            f, err := os.Open(*chanlist_file)
+            if err != nil {
+                return nil, err
+            }
+
+            content, err := io.ReadAll(f)
+            if err != nil {
+                return nil, err
+            }
+
+            ids := strings.Split(string(content), "\n")
+            for i := range ids {
+                ids[i] = strings.ReplaceAll(strings.Join(strings.Fields(ids[i]), ""), "\r", "")
+                ids[i] = strings.ReplaceAll(ids[i], "\t", "")
+            }
+
+            return ids[:len(ids)-1], nil
+        }()         
+        if err != nil {
+            l.Println(err.Error())
+            os.Exit(1)
+        }
+        ids = append(ids, listids...)
+    }
+
+    if len(ids) == 0 {
+        l.Println("no channel id or list file provided")
         os.Exit(1)
     }
-    
-   // cache, err := ytlinkprov.NewCachedLinkProvider(time.Minute * time.Duration(*interval))
-   // if err != nil {
-   //     l.Println(err.Error())
-   //     os.Exit(1)
-   // }
+    l.Println("channel count: ", len(ids))
+    l.Printf("channels: %v\n", ids)
+
+    l.Println("initial feed generation")
+    genFeeds(ids)
+
     cache := dylinkprovider.NewDynCacheExpLinkProv(&l)
 
     bouncer, err := bouncer.NewBouncerHTTPServer(context.Background(), *listenAddr, cache)
@@ -48,14 +86,6 @@ func main() {
         l.Println(err.Error())
         os.Exit(1)
     }
-
-    // This goro is sleeping until interval or SIGINT
-    // Another one is running the bouncer
-
-    go func() {
-        l.Printf("http bouncer server starting on %s\n", bouncer.Addr)
-        l.Println(bouncer.ListenAndServe())
-    }()
 
     os.Mkdir("feeds", 0700)
 
@@ -70,15 +100,17 @@ func main() {
     }
 
     go func() {
-        l.Printf("http file server starting on %s\n", fileServer.Addr)
-        l.Println(fileServer.ListenAndServe())
+        l.Printf("http bouncer server starting on %s\n", bouncer.Addr)
+        l.Println(bouncer.ListenAndServe())
+        l.Println("http bouncer stopped")
     }()
 
-    err = genFeed()
-    if err != nil {
-        l.Println(err.Error())
-        os.Exit(1)
-    }
+    go func() {
+        l.Printf("http file server starting on %s\n", fileServer.Addr)
+        l.Println(fileServer.ListenAndServe())
+        l.Println("http file server stopped")
+    }()
+
     
     sig := make(chan os.Signal)
 
@@ -88,28 +120,50 @@ func main() {
     for {
         select {
         case s := <-sig:
+
             l.Println("got ", s.String())
             fileServer.Shutdown(context.Background())
             bouncer.Shutdown(context.Background())
             break l
+
         case <-time.NewTicker(time.Minute * time.Duration(*interval)).C:
-            l.Println("tick")
-            genFeed()
+            genFeeds(ids)
     }}
 
 }
 
-func genFeed() error {
+func genFeeds(ids []string) {
+    for _, id := range ids {
+        l.Printf("generating feed for %s\n", id)
+        err := genFeed(id)
+        if err != nil {
+            l.Printf(err.Error())
+            continue
+        }
+    }
+}
 
-    l.Println("generating feed")
-    file, err := os.Create("./feeds/f.xml")
+func genFeed(id string) error {
+
+    tmpFilename := fmt.Sprintf("./feeds/%s.xml.t", id)
+    finalFilename := fmt.Sprintf("./feeds/%s.xml", id)
+
+    file, err := os.Create(tmpFilename)
     if err != nil {
         return err
     }
     defer file.Close()
+    defer func() {
+        l.Printf("removing tempfile %s\n", tmpFilename)
+        os.Remove(tmpFilename)
+    }()
 
-    return feed.ConvertYtToRss(file, *chan_id, feed.RSSMetadata{
+    err = feed.ConvertYtToRss(file, id, feed.RSSMetadata{
         Languge: *lang,
         BounceURL: *bounc_url,
     })
+
+    if err != nil { return err }
+
+    return os.Rename(tmpFilename, finalFilename)
 }
