@@ -1,20 +1,20 @@
 package main
 
 import (
-	"context"
-	"flag"
-	"fmt"
-	"io"
-	"log"
-	"net/http"
-	"os"
-	"os/signal"
-	"strings"
-	"time"
+    "context"
+    "flag"
+    "fmt"
+    "io"
+    "log"
+    "net/http"
+    "os"
+    "os/signal"
+    "strings"
+    "time"
 
-	"gitea.hbanafa.com/hesham/yttopodcast/bouncer"
-	"gitea.hbanafa.com/hesham/yttopodcast/dylinkprovider"
-	"gitea.hbanafa.com/hesham/yttopodcast/feed"
+    "gitea.hbanafa.com/hesham/yttopodcast/bouncer"
+    "gitea.hbanafa.com/hesham/yttopodcast/dylinkprovider"
+    "gitea.hbanafa.com/hesham/yttopodcast/feed"
 )
 
 var (
@@ -76,7 +76,7 @@ func main() {
     l.Println("channel count: ", len(ids))
     l.Printf("channels: %v\n", ids)
 
-    l.Println("initial feed generation")
+    l.Println("[feed] initial feed generation")
     genFeeds(ids)
 
     cache := dylinkprovider.NewDynCacheExpLinkProv(&l)
@@ -134,7 +134,7 @@ func main() {
 
 func genFeeds(ids []string) {
     for _, id := range ids {
-        l.Printf("generating feed for %s\n", id)
+        l.Printf("[feed] generating feed for %s\n", id)
         err := genFeed(id)
         if err != nil {
             l.Printf(err.Error())
@@ -153,10 +153,7 @@ func genFeed(id string) error {
         return err
     }
     defer file.Close()
-    defer func() {
-        l.Printf("removing tempfile %s\n", tmpFilename)
-        os.Remove(tmpFilename)
-    }()
+    defer os.Remove(tmpFilename)
 
     err = feed.ConvertYtToRss(file, id, feed.RSSMetadata{
         Languge: *lang,
