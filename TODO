@@ -1,5 +1,3 @@
 - Avoid invoking getRemoteLink multiple times for the same item id
     for link providers
 
-- Limite cache size (Cache replacement policy)
-

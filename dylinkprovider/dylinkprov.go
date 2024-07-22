@@ -1,21 +1,24 @@
 package dylinkprovider
 
 import (
-	"context"
-	"fmt"
-	"log"
-	"net/http"
-	"net/url"
-	"strconv"
-	"strings"
-	"sync"
-	"time"
+    "context"
+    "fmt"
+    "log"
+    "net/http"
+    "net/url"
+    "strconv"
+    "strings"
+    "sync"
+    "time"
 
-	"gitea.hbanafa.com/hesham/yttopodcast/ytlinkprov"
-	"github.com/lrstanley/go-ytdlp"
+    "gitea.hbanafa.com/hesham/yttopodcast/ytlinkprov"
+    "github.com/lrstanley/go-ytdlp"
 )
 
-const Q_EXPIRE = "expire"
+const (
+    Q_EXPIRE = "expire"
+    MAX_MAP_SZ = 1000
+)
 
 type DynamicCacheExpLinkProvider struct {
     cache map[string]url.URL
@@ -37,7 +40,7 @@ func NewDynCacheExpLinkProv(l *log.Logger) *DynamicCacheExpLinkProvider {
 // GetLink implements ytlinkprov.YtLinkProvider.
 func (d *DynamicCacheExpLinkProvider) GetLink(id string) (link string, err error) {
 
-    
+
     d.lock.RLock()
     cl1, ok := d.cache[id]
     d.lock.RUnlock()
@@ -58,11 +61,18 @@ func (d *DynamicCacheExpLinkProvider) GetLink(id string) (link string, err error
     }
 
     d.lock.Lock()
+    if len(d.cache) >= MAX_MAP_SZ {
+        var k string
+        for kk := range d.cache { 
+            k = kk
+            break
+        }
+        delete(d.cache, k)
+    }
     d.cache[id] = *newlinkurl
     d.lock.Unlock()
 
     d.l.Printf("[cache] new entry for %s\n", id)
-    d.l.Printf("%d items in map\n", len(d.cache))
     return newlinkurl.String(), nil
 
 }
