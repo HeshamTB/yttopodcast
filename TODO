@@ -1,3 +1,8 @@
 - Avoid invoking getRemoteLink multiple times for the same item id
     for link providers
 
+- Watch channels/ids file for changes and take action on the changes
+
+- Allow full build with description and mime/type
+
+- List out the needed formats from yt-dlp
