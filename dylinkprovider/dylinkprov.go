@@ -82,7 +82,12 @@ func getRemoteLink(id string) (string, error) {
     var link string
 
     vidUrl := fmt.Sprintf("https://youtube.com/watch?v=%s", id)
-    ytCmd := ytdlp.New().ExtractAudio().GetURL()
+    ytCmd := ytdlp.New().
+        ExtractAudio().
+        GetURL().
+        AudioFormat("ba[ext=mp3]/ba[ext=m4a]/ba[ext=mp4]").
+        NoPlaylist()
+
     ytRes, err := ytCmd.Run(context.Background(), vidUrl)
     if err != nil {
         return "", err
