@@ -1,20 +1,21 @@
 package main
 
 import (
-    "context"
-    "flag"
-    "fmt"
-    "io"
-    "log"
-    "net/http"
-    "os"
-    "os/signal"
-    "strings"
-    "time"
+	"context"
+	"errors"
+	"flag"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"strings"
+	"time"
 
-    "gitea.hbanafa.com/hesham/yttopodcast/bouncer"
-    "gitea.hbanafa.com/hesham/yttopodcast/dylinkprovider"
-    "gitea.hbanafa.com/hesham/yttopodcast/feed"
+	"gitea.hbanafa.com/hesham/yttopodcast/bouncer"
+	"gitea.hbanafa.com/hesham/yttopodcast/dylinkprovider"
+	"gitea.hbanafa.com/hesham/yttopodcast/feed"
 )
 
 var (
@@ -134,10 +135,9 @@ func main() {
 
 func genFeeds(ids []string) {
     for _, id := range ids {
-        l.Printf("[feed] generating feed for %s\n", id)
         err := genFeed(id)
         if err != nil {
-            l.Printf(err.Error())
+            l.Printf(fmt.Errorf("failed to generate feed for %s %v:", id, err).Error())
             continue
         }
     }
