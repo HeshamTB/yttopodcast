@@ -1,21 +1,21 @@
 package main
 
 import (
-	"context"
-	"errors"
-	"flag"
-	"fmt"
-	"io"
-	"log"
-	"net/http"
-	"os"
-	"os/signal"
-	"strings"
-	"time"
+    "context"
+    "flag"
+    "fmt"
+    "io"
+    "log"
+    "net/http"
+    "os"
+    "os/signal"
+    "strings"
+    "time"
 
-	"gitea.hbanafa.com/hesham/yttopodcast/bouncer"
-	"gitea.hbanafa.com/hesham/yttopodcast/dylinkprovider"
-	"gitea.hbanafa.com/hesham/yttopodcast/feed"
+    "gitea.hbanafa.com/hesham/yttopodcast/bouncer"
+    "gitea.hbanafa.com/hesham/yttopodcast/dylinkprovider"
+    "gitea.hbanafa.com/hesham/yttopodcast/feed"
+    "github.com/fsnotify/fsnotify"
 )
 
 var (
@@ -35,6 +35,7 @@ func main() {
     
     flag.Parse()
     l = *log.Default()
+    watchfEvent := make(chan struct{})
 
 
     var ids []string
@@ -68,6 +69,7 @@ func main() {
             os.Exit(1)
         }
         ids = append(ids, listids...)
+        go Watch(context.Background(), fsnotify.Write,*chanlist_file, watchfEvent, &l)
     }
 
     if len(ids) == 0 {
@@ -77,7 +79,7 @@ func main() {
     l.Println("channel count: ", len(ids))
     l.Printf("channels: %v\n", ids)
 
-    l.Println("[feed] initial feed generation")
+    l.Println("initial feed generation")
     genFeeds(ids)
 
     cache := dylinkprovider.NewDynCacheExpLinkProv(&l)
@@ -125,11 +127,25 @@ func main() {
             l.Println("got ", s.String())
             fileServer.Shutdown(context.Background())
             bouncer.Shutdown(context.Background())
+            StopWatch()
             break l
 
+        case <- watchfEvent:
+            l.Println("chanlist file changed")
+            newIds, err := readChanlistFile(*chanlist_file)
+            if err != nil {
+                l.Println(fmt.Errorf("watchfile: %v", err))
+                continue
+            }
+            ids = newIds
+            l.Println("updated channle ids")
+            l.Printf("channel count: %v", len(ids))
+            genFeeds(ids)
         case <-time.NewTicker(time.Minute * time.Duration(*interval)).C:
             genFeeds(ids)
     }}
+
+    time.Sleep(time.Second)
 
 }
 
@@ -164,3 +180,25 @@ func genFeed(id string) error {
 
     return os.Rename(tmpFilename, finalFilename)
 }
+
+
+func readChanlistFile(filename string) ([]string, error) {
+    f, err := os.Open(filename)
+    if err != nil {
+        return nil, err
+    }
+
+    content, err := io.ReadAll(f)
+    if err != nil {
+        return nil, err
+    }
+
+    ids := strings.Split(string(content), "\n")
+    for i := range ids {
+        ids[i] = strings.ReplaceAll(strings.Join(strings.Fields(ids[i]), ""), "\r", "")
+        ids[i] = strings.ReplaceAll(ids[i], "\t", "")
+    }
+
+    return ids[:len(ids)-1], nil
+}
+
