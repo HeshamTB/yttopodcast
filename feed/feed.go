@@ -80,6 +80,9 @@ func convertFeedToRSS(w io.Writer, feed gofeed.Feed, meta RSSMetadata) error {
 	gg := g[len(g)-1]
 	thumb := gg.Children["thumbnail"][0]
 
+	de := gg.Children["description"]
+	desc := de[0].Value
+
 	coverArtUrl, err := url.Parse(thumb.Attrs["url"])
 	if err != nil {
 	    return errors.Join(err, errors.New(
@@ -101,7 +104,7 @@ func convertFeedToRSS(w io.Writer, feed gofeed.Feed, meta RSSMetadata) error {
 		Id:                  id,
 		Duration:            "0",
 		PublishDateRfcEmail: item.PublishedParsed.Format(time.RFC1123Z),
-		Description:         "TBI",
+		Description:         desc,
 		Length:              0,
 		EnclosureURL:	     bounceURL.String(),
 	})
